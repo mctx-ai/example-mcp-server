@@ -1,0 +1,10 @@
+{
+  "name": "Hello World",
+  "version": "0.1.0",
+  "description": "A minimal hello world MCP server — clone, customize, deploy to mctx",
+  "entrypoint": "index.js",
+  "instructions": "A hello world MCP server. Use the 'hello' tool to get a greeting. Defaults to 'Hello' but can be customized via the GREETING environment variable.",
+  "capabilities": {
+    "tools": {}
+  }
+}
