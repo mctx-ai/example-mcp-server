@@ -1,10 +1,10 @@
 <img src="https://mctx.ai/brand/logo-purple.png" alt="mctx" width="120">
 
+**Free MCP Hosting. Set Your Price. Get Paid.**
+
 # Example MCP Server
 
 A minimal, working MCP server you can clone and deploy to mctx. No framework, no build step, no dependencies. Just JavaScript.
-
-**Free MCP Hosting. Set Your Price. Get Paid.**
 
 ---
 
@@ -18,20 +18,21 @@ Fork this repo, customize it to your needs, and deploy. It just works.
 
 ## Quick Start
 
-Clone the repository:
+1. Fork this repository on GitHub.
+
+2. Clone your fork:
 
 ```bash
-git clone https://github.com/mctx-ai/example-mcp-server.git
+git clone https://github.com/YOUR-USERNAME/example-mcp-server.git
 cd example-mcp-server
 ```
 
-Optionally customize `index.js` to add your own tools.
+3. Customize `index.js` to add your own tools.
 
-Connect your GitHub repository to mctx and deploy:
+4. Connect your repository to mctx and deploy:
 
-1. Visit [mctx.ai](https://mctx.ai)
-2. Connect your forked repository
-3. Deploy — mctx automatically detects `mctx.json` and runs your server
+   - Visit [mctx.ai](https://mctx.ai)
+   - Deploy — mctx automatically detects your repository, reads `mctx.json`, and runs your server
 
 That's it. Your MCP server is live.
 
@@ -49,7 +50,7 @@ Bump the `version` field to trigger a new deployment.
 
 ### `index.js`
 
-The MCP server itself, written as a Cloudflare Worker. Implements JSON-RPC 2.0 protocol handling for MCP methods:
+A JavaScript module that implements the MCP server. Handles JSON-RPC 2.0 protocol processing for MCP methods:
 
 - `tools/list` — Returns available tools
 - `tools/call` — Executes a tool by name
@@ -100,14 +101,6 @@ case 'tools/list':
 **Update metadata:**
 
 Edit `mctx.json` to reflect your server's name, description, and version. Bumping the version triggers a new deployment.
-
-**Test locally:**
-
-Run the server locally with Wrangler (Cloudflare's CLI) before deploying:
-
-```bash
-npx wrangler dev index.js
-```
 
 ---
 
