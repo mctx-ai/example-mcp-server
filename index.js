@@ -1,128 +1,121 @@
 /**
- * Hello World MCP Server
+ * Example MCP Server
  *
- * A minimal Model Context Protocol (MCP) server implementation for the mctx platform.
- * Demonstrates the core JSON-RPC 2.0 protocol handling required for MCP servers.
+ * Built with @mctx-ai/mcp-server — a lightweight framework that handles
+ * JSON-RPC 2.0 protocol, routing, and serialization automatically.
  *
- * This server runs as a Cloudflare Worker and provides a single "hello" tool.
+ * Demonstrates: tools, progress generators, sampling, static + dynamic
+ * resources, single + multi-message prompts, and structured logging.
  */
 
-export default {
-  async fetch(request, env) {
-    // Handle CORS preflight requests
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      });
-    }
+import { createServer, T, conversation, createProgress, log } from '@mctx-ai/mcp-server';
 
-    // Only accept POST requests for JSON-RPC
-    if (request.method !== 'POST') {
-      return jsonRpcError(-32600, 'Invalid Request - Only POST allowed', null, 405);
-    }
+const app = createServer();
 
-    // Parse JSON-RPC request
-    let body;
-    try {
-      body = await request.json();
-    } catch (error) {
-      return jsonRpcError(-32700, 'Parse error - Invalid JSON', null, 400);
-    }
+// ─── Tools ──────────────────────────────────────────────────────────
 
-    const { method, params, id } = body;
-
-    // Route to appropriate handler based on JSON-RPC method
-    switch (method) {
-      case 'tools/list':
-        return jsonRpcResponse({
-          tools: [
-            {
-              name: 'hello',
-              description: 'Get a friendly greeting from the server',
-              inputSchema: {
-                type: 'object',
-                properties: {},
-              },
-            },
-          ],
-        }, id);
-
-      case 'tools/call':
-        // Extract tool name from params
-        const toolName = params?.name;
-
-        if (toolName !== 'hello') {
-          return jsonRpcError(-32601, `Unknown tool: ${toolName}`, id, 400);
-        }
-
-        // Get greeting from environment variable or use default
-        const greeting = env.GREETING || 'Hello';
-
-        return jsonRpcResponse({
-          content: [
-            {
-              type: 'text',
-              text: `${greeting}, World!`,
-            },
-          ],
-        }, id);
-
-      case 'notifications/cancelled':
-        // Standard MCP notification - return empty result
-        return jsonRpcResponse({}, id);
-
-      default:
-        return jsonRpcError(-32601, `Method not found: ${method}`, id, 400);
-    }
-  },
+// Basic tool — string return
+const greet = ({ name }) => {
+  log.info(`Greeting ${name}`);
+  return `Hello, ${name}!`;
 };
+greet.description = 'Greets a person by name';
+greet.input = {
+  name: T.string({ required: true, description: 'Name to greet' }),
+};
+app.tool('greet', greet);
 
-/**
- * Create a successful JSON-RPC 2.0 response
- */
-function jsonRpcResponse(result, id) {
-  return new Response(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      result,
-      id,
-    }),
-    {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'MCP-Protocol-Version': '2025-11-25',
-        'Access-Control-Allow-Origin': '*',
-      },
-    }
-  );
-}
+// Tool — object return (auto-serialized to JSON)
+const calculate = ({ operation, a, b }) => {
+  const ops = { add: a + b, subtract: a - b, multiply: a * b, divide: a / b };
+  if (operation === 'divide' && b === 0) {
+    throw new Error('Division by zero');
+  }
+  return { operation, a, b, result: ops[operation] };
+};
+calculate.description = 'Performs arithmetic operations';
+calculate.input = {
+  operation: T.string({ required: true, enum: ['add', 'subtract', 'multiply', 'divide'] }),
+  a: T.number({ required: true, description: 'First operand' }),
+  b: T.number({ required: true, description: 'Second operand' }),
+};
+app.tool('calculate', calculate);
 
-/**
- * Create a JSON-RPC 2.0 error response
- */
-function jsonRpcError(code, message, id, httpStatus = 400) {
-  return new Response(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      error: {
-        code,
-        message,
-      },
-      id,
-    }),
-    {
-      status: httpStatus,
-      headers: {
-        'Content-Type': 'application/json',
-        'MCP-Protocol-Version': '2025-11-25',
-        'Access-Control-Allow-Origin': '*',
-      },
-    }
-  );
-}
+// Generator tool — progress notifications via yield
+const analyze = function* ({ topic }) {
+  const step = createProgress(3);
+  yield step(); // progress 1/3
+  // ... research work would happen here
+  yield step(); // progress 2/3
+  // ... analysis work would happen here
+  yield step(); // progress 3/3
+  return `Analysis of "${topic}" complete. Found 42 insights across 7 categories.`;
+};
+analyze.description = 'Analyzes a topic with progress updates';
+analyze.input = {
+  topic: T.string({ required: true, description: 'Topic to analyze' }),
+};
+app.tool('analyze', analyze);
+
+// Sampling tool — asks the LLM for clarification via 2nd parameter
+const smartAnswer = async ({ question }, ask) => {
+  if (ask) {
+    const clarification = await ask('What additional context would help me answer this better?');
+    return `Question: ${question}\nContext: ${clarification}\nAnswer: With the additional context, here is a comprehensive answer.`;
+  }
+  return `Answer to: ${question}`;
+};
+smartAnswer.description = 'Answers questions, optionally asking the LLM for clarification';
+smartAnswer.input = {
+  question: T.string({ required: true, description: 'Question to answer' }),
+};
+app.tool('smart-answer', smartAnswer);
+
+// ─── Resources ──────────────────────────────────────────────────────
+
+// Static resource — exact URI
+const readme = () => 'Welcome to the example MCP server built with @mctx-ai/mcp-server. This server demonstrates tools, resources, prompts, progress tracking, and sampling.';
+readme.description = 'Server documentation';
+readme.mimeType = 'text/plain';
+app.resource('docs://readme', readme);
+
+// Dynamic resource — URI template with parameter extraction
+const userProfile = ({ userId }) => JSON.stringify({
+  id: userId,
+  name: `User ${userId}`,
+  joined: '2024-01-01',
+  plan: 'pro',
+});
+userProfile.description = 'User profile by ID';
+userProfile.mimeType = 'application/json';
+app.resource('user://{userId}', userProfile);
+
+// ─── Prompts ────────────────────────────────────────────────────────
+
+// Single-message prompt — string return becomes one user message
+const codeReview = ({ code, language }) =>
+  `Please review this ${language || 'code'} for bugs, security issues, and improvements:\n\n\`\`\`${language || ''}\n${code}\n\`\`\``;
+codeReview.description = 'Code review prompt';
+codeReview.input = {
+  code: T.string({ required: true, description: 'Code to review' }),
+  language: T.string({ description: 'Programming language' }),
+};
+app.prompt('code-review', codeReview);
+
+// Multi-message prompt — conversation() builds structured dialogue
+const debug = ({ error, context }) =>
+  conversation(({ user, ai }) => [
+    user.say(`I'm seeing this error: ${error}`),
+    ...(context ? [user.attach(context, 'text/plain')] : []),
+    ai.say('I will analyze the error and provide step-by-step debugging guidance.'),
+  ]);
+debug.description = 'Debug assistance prompt with structured dialogue';
+debug.input = {
+  error: T.string({ required: true, description: 'Error message or description' }),
+  context: T.string({ description: 'Additional context, stack trace, or logs' }),
+};
+app.prompt('debug', debug);
+
+// ─── Export ─────────────────────────────────────────────────────────
+
+export default { fetch: app.fetch };

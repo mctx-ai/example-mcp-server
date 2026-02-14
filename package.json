@@ -1,0 +1,14 @@
+{
+  "name": "example-mcp-server",
+  "version": "0.1.0",
+  "description": "Example MCP server built with @mctx-ai/mcp-server",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "mkdir -p dist && cp index.js dist/index.js"
+  },
+  "dependencies": {
+    "@mctx-ai/mcp-server": "^0.1.0"
+  },
+  "license": "MIT"
+}

@@ -1,10 +1,12 @@
 {
-  "name": "Hello World",
-  "version": "0.1.0",
-  "description": "A minimal hello world MCP server — clone, customize, deploy to mctx",
-  "entrypoint": "index.js",
-  "instructions": "A hello world MCP server. Use the 'hello' tool to get a greeting. Defaults to 'Hello' but can be customized via the GREETING environment variable.",
+  "name": "Example Server",
+  "version": "0.2.0",
+  "description": "Example MCP server demonstrating tools, resources, prompts, progress, and sampling — built with @mctx-ai/mcp-server",
+  "entrypoint": "dist/index.js",
+  "instructions": "An example MCP server showcasing all framework features. Use 'greet' for a hello, 'calculate' for math, 'analyze' for progress-tracked analysis, and 'smart-answer' for LLM-assisted Q&A. Resources include docs://readme and user://{userId}. Prompts include 'code-review' and 'debug'.",
   "capabilities": {
-    "tools": {}
+    "tools": {},
+    "resources": {},
+    "prompts": {}
   }
 }
