@@ -29,7 +29,13 @@ import {
 // tells LLM clients what this server offers and how to use it.
 
 const server = createServer({
-  instructions: `An example MCP server showcasing all framework features. Use 'greet' for a hello (customizable via GREETING env var), 'calculate' for math, 'analyze' for progress-tracked analysis, and 'smart-answer' for LLM-assisted Q&A. Resources include docs://readme and user://{userId}. Prompts include 'code-review' and 'debug'.`,
+  instructions:
+    'An example MCP server showcasing all framework features. ' +
+    "Use 'greet' for a hello (customizable via GREETING env var), " +
+    "'calculate' for math, 'analyze' for progress-tracked analysis, " +
+    "and 'smart-answer' for LLM-assisted Q&A. Resources include " +
+    "docs://readme and user://{userId}. Prompts include 'code-review' " +
+    "and 'debug'.",
 });
 
 // ─── Tools ───────────────────────────────────────────────────────────
@@ -56,7 +62,8 @@ const greet: ToolHandler = (args) => {
 
   return `${greeting}, ${name}!`;
 };
-greet.description = 'Greets a person by name using the GREETING environment variable (default: "Hello")';
+greet.description =
+  'Greets a person by name using the GREETING environment variable (default: "Hello")';
 greet.input = {
   name: T.string({
     required: true,
@@ -156,15 +163,12 @@ const smartAnswer: ToolHandler = async (args, ask?) => {
   }
 
   log.debug('Sampling enabled, requesting clarification from LLM');
-  const clarification = await ask(
-    'What additional context would help me answer this better?',
-  );
+  const clarification = await ask('What additional context would help me answer this better?');
   log.debug({ clarification });
 
   return `Question: ${question}\nContext: ${clarification}\nAnswer: With the additional context, here is a comprehensive answer.`;
 };
-smartAnswer.description =
-  'Answers questions, optionally asking the LLM for clarification';
+smartAnswer.description = 'Answers questions, optionally asking the LLM for clarification';
 smartAnswer.input = {
   question: T.string({
     required: true,
@@ -228,9 +232,7 @@ const debug: PromptHandler = (args) => {
   return conversation(({ user, ai }) => [
     user.say(`I'm seeing this error: ${error}`),
     ...(context ? [user.say(`Context:\n${context}`)] : []),
-    ai.say(
-      'I will analyze the error and provide step-by-step debugging guidance.',
-    ),
+    ai.say('I will analyze the error and provide step-by-step debugging guidance.'),
   ]);
 };
 debug.description = 'Debug assistance prompt with structured dialogue';
