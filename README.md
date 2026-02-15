@@ -10,11 +10,9 @@ A working MCP server built with [`@mctx-ai/mcp-server`](https://github.com/mctx-
 
 ## What This Demonstrates
 
-All framework features in one file:
+All framework features in one file (`src/index.ts`):
 
-- **Tools** — string return, object return, error handling
-- **Progress** — generator functions with `yield step()` notifications
-- **Sampling** — ask the LLM for clarification via the `ask` parameter
+- **Tools** — sync handlers, object returns, error handling, generators with progress, LLM sampling
 - **Resources** — static URIs and dynamic URI templates with parameter extraction
 - **Prompts** — single-message (string return) and multi-message (`conversation()`)
 - **Logging** — structured logging with `log.info()`, `log.error()`, etc.
@@ -41,7 +39,7 @@ Deploy to mctx:
 ## Project Structure
 
 ```
-index.ts     → Server implementation (all features in ~160 lines)
+src/index.ts → Server implementation (all features in one file)
 package.json → Server metadata (name, version, description, main entrypoint)
 ```
 
@@ -52,7 +50,7 @@ package.json → Server metadata (name, version, description, main entrypoint)
 Use the dev server for hot-reload during development:
 
 ```bash
-npx mctx-dev index.js
+npx mctx-dev dist/index.js
 ```
 
 ---
