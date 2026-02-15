@@ -117,7 +117,7 @@ jobs:
           echo "$NEW_HASH" > .dist-hash
 
           # Commit and push
-          git add dist/ mctx.json package.json .dist-hash
+          git add -f dist/ mctx.json package.json .dist-hash
           git commit -m "release: v${NEW_VERSION}"
           git push https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git release
 
