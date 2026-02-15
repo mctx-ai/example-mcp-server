@@ -24,7 +24,7 @@ async function getResponse(response: Response) {
 // ─── Tools Tests ────────────────────────────────────────────────────
 
 describe('Tool: greet', () => {
-  test('should greet a person by name', async () => {
+  test('should greet a person by name with default greeting', async () => {
     const req = createRequest('tools/call', {
       name: 'greet',
       arguments: { name: 'Alice' },
@@ -44,6 +44,27 @@ describe('Tool: greet', () => {
     const data = await getResponse(res);
 
     expect(data.result.content[0].text).toBe('Hello, Bob!');
+  });
+
+  test('should use GREETING environment variable when set', async () => {
+    const originalGreeting = process.env.GREETING;
+    process.env.GREETING = 'Howdy';
+
+    const req = createRequest('tools/call', {
+      name: 'greet',
+      arguments: { name: 'Charlie' },
+    });
+    const res = await server.fetch(req);
+    const data = await getResponse(res);
+
+    expect(data.result.content[0].text).toBe('Howdy, Charlie!');
+
+    // Restore original value
+    if (originalGreeting === undefined) {
+      delete process.env.GREETING;
+    } else {
+      process.env.GREETING = originalGreeting;
+    }
   });
 });
 

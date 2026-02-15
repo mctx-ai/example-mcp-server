@@ -16,6 +16,7 @@ All framework features in one file (`src/index.ts`):
 - **Resources** — static URIs and dynamic URI templates with parameter extraction
 - **Prompts** — single-message (string return) and multi-message (`conversation()`)
 - **Logging** — structured logging with `log.info()`, `log.error()`, etc.
+- **Environment Variables** — configurable behavior via `GREETING` env var (set in mctx dashboard)
 
 ---
 
@@ -47,11 +48,23 @@ package.json → Server metadata (name, version, description, main entrypoint)
 
 ## Local Development
 
-Use the dev server for hot-reload during development:
+Run the dev server with automatic rebuild and hot-reload:
 
 ```bash
-npx mctx-dev dist/index.js
+npm run dev
 ```
+
+This runs both esbuild watch (rebuilds on source changes) and `mctx-dev` (hot-reloads the server) in parallel.
+
+### Testing Environment Variables
+
+To test environment variable configuration locally:
+
+```bash
+GREETING="Howdy" npm run dev
+```
+
+The `greet` tool will use "Howdy" instead of the default "Hello". When deployed to mctx, set `GREETING` in the dashboard to customize the greeting.
 
 ---
 

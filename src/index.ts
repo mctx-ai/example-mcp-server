@@ -29,7 +29,7 @@ import {
 // tells LLM clients what this server offers and how to use it.
 
 const server = createServer({
-  instructions: `An example MCP server showcasing all framework features. Use 'greet' for a hello, 'calculate' for math, 'analyze' for progress-tracked analysis, and 'smart-answer' for LLM-assisted Q&A. Resources include docs://readme and user://{userId}. Prompts include 'code-review' and 'debug'.`,
+  instructions: `An example MCP server showcasing all framework features. Use 'greet' for a hello (customizable via GREETING env var), 'calculate' for math, 'analyze' for progress-tracked analysis, and 'smart-answer' for LLM-assisted Q&A. Resources include docs://readme and user://{userId}. Prompts include 'code-review' and 'debug'.`,
 });
 
 // ─── Tools ───────────────────────────────────────────────────────────
@@ -43,15 +43,20 @@ const server = createServer({
 //   - Generator handler yielding progress notifications
 //   - Async handler using `ask` for LLM sampling
 
-/** Simplest tool pattern: receive args, return a string. */
+/**
+ * Simplest tool pattern: receive args, return a string.
+ * Demonstrates environment variable usage via GREETING env var.
+ * Set GREETING in the mctx dashboard to customize the greeting message.
+ */
 const greet: ToolHandler = (args) => {
   const { name } = args as { name: string };
+  const greeting = process.env.GREETING || 'Hello';
 
-  log.info(`Greeting ${name}`);
+  log.info(`Greeting ${name} with: ${greeting}`);
 
-  return `Hello, ${name}!`;
+  return `${greeting}, ${name}!`;
 };
-greet.description = 'Greets a person by name';
+greet.description = 'Greets a person by name using the GREETING environment variable (default: "Hello")';
 greet.input = {
   name: T.string({
     required: true,
