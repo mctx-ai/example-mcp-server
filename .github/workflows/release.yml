@@ -93,12 +93,19 @@ jobs:
           git config user.name "mctx-bot[bot]"
           git config user.email "mctx-bot[bot]@users.noreply.github.com"
 
+          # Save built artifacts BEFORE switching branches
+          cp -r dist/ /tmp/dist-release/
+          cp package.json /tmp/package-release.json
+          cp mctx.json /tmp/mctx-release.json
+
           # Checkout release branch
           git fetch origin release
           git checkout release
 
-          # Copy built artifacts and update versions
-          git checkout main -- dist/
+          # Copy artifacts back
+          cp -r /tmp/dist-release/* dist/ 2>/dev/null || mkdir -p dist && cp -r /tmp/dist-release/* dist/
+          cp /tmp/package-release.json package.json
+          cp /tmp/mctx-release.json mctx.json
 
           # Update mctx.json version
           jq --arg v "$NEW_VERSION" '.version = $v' mctx.json > mctx.json.tmp && mv mctx.json.tmp mctx.json
