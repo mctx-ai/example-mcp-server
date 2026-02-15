@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --outfile=dist/index.js --external:@mctx-ai/mcp-server",
+    "build": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --outfile=dist/index.js",
     "dev": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:@mctx-ai/mcp-server --watch --sourcemap",
     "test": "vitest run",
     "lint": "eslint src/",
