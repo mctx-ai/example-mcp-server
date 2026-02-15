@@ -34,16 +34,15 @@ Deploy to mctx:
 
 1. Visit [mctx.ai](https://mctx.ai)
 2. Connect your repository
-3. Deploy — mctx reads `mctx.json` and runs your server
+3. Deploy — mctx reads `package.json` for server configuration
 
 ---
 
 ## Project Structure
 
 ```
-index.js     → Server implementation (all features in ~110 lines)
-mctx.json    → Platform configuration (name, entrypoint, capabilities)
-package.json → Dependencies and build script
+index.ts     → Server implementation (all features in ~160 lines)
+package.json → Server metadata (name, version, description, main entrypoint)
 ```
 
 ---

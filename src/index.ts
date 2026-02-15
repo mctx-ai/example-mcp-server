@@ -20,7 +20,9 @@ import {
   type PromptHandler,
 } from '@mctx-ai/mcp-server';
 
-const app = createServer();
+const app = createServer({
+  instructions: `An example MCP server showcasing all framework features. Use 'greet' for a hello, 'calculate' for math, 'analyze' for progress-tracked analysis, and 'smart-answer' for LLM-assisted Q&A. Resources include docs://readme and user://{userId}. Prompts include 'code-review' and 'debug'.`,
+});
 
 // ─── Tools ──────────────────────────────────────────────────────────
 
