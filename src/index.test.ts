@@ -46,6 +46,17 @@ describe('Tool: greet', () => {
     expect(data.result.content[0].text).toBe('Hello, Bob!');
   });
 
+  test('should trim whitespace from name', async () => {
+    const req = createRequest('tools/call', {
+      name: 'greet',
+      arguments: { name: '  Alice  ' },
+    });
+    const res = await server.fetch(req);
+    const data = await getResponse(res);
+
+    expect(data.result.content[0].text).toBe('Hello, Alice!');
+  });
+
   test('should use GREETING environment variable when set', async () => {
     const originalGreeting = process.env.GREETING;
     process.env.GREETING = 'Howdy';

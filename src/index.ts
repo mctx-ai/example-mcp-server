@@ -57,10 +57,11 @@ const server = createServer({
 const greet: ToolHandler = (args) => {
   const { name } = args as { name: string };
   const greeting = process.env.GREETING || 'Hello';
+  const trimmedName = name.trim();
 
-  log.info(`Greeting ${name} with: ${greeting}`);
+  log.info(`Greeting ${trimmedName} with: ${greeting}`);
 
-  return `${greeting}, ${name}!`;
+  return `${greeting}, ${trimmedName}!`;
 };
 greet.description =
   'Greets a person by name using the GREETING environment variable (default: "Hello")';
