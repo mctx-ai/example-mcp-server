@@ -1,2 +1,5 @@
-# Protect CI/CD workflow files — require owner review for any changes
+# Default — all changes require maintainer review
+* @karlhepler
+
+# CI/CD workflow files — explicit protection
 /.github/ @karlhepler
