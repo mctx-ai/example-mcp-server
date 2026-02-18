@@ -137,6 +137,7 @@ jobs:
 
       - name: Bump version on main
         if: steps.hash-check.outputs.changed == 'true'
+        id: bump-main
         continue-on-error: true
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}
@@ -158,4 +159,17 @@ jobs:
 
           git add package.json
           git commit -m "chore: bump version to ${NEW_VERSION} [skip ci]"
+
+          # Verify only package.json was modified
+          changed_files=$(git diff --name-only HEAD~1)
+          if [ "$changed_files" != "package.json" ]; then
+            echo "ERROR: Unexpected files modified: ${changed_files}"
+            exit 1
+          fi
+
           git push origin main
+
+      - name: Warn if version sync to main failed
+        if: steps.bump-main.outcome == 'failure'
+        run: |
+          echo "::warning::Failed to sync version ${{ steps.version.outputs.new_version }} back to main branch. The release was created successfully on the release branch, but main still has the old version. Manual intervention may be required."
