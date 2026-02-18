@@ -142,7 +142,7 @@ describe('Tool: calculate', () => {
     const data = await getResponse(res);
 
     expect(data.result.isError).toBe(true);
-    expect(data.result.content[0].text).toContain('Division by zero');
+    expect(data.result.content[0].text).toContain('by zero');
   });
 });
 

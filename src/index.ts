@@ -86,7 +86,7 @@ const calculate: ToolHandler = (args) => {
   // Guard clause: check for invalid input before doing any work
   if (operation === 'divide' && b === 0) {
     log.error({ error: 'Division by zero attempted', operation, a, b });
-    throw new Error('Division by zero');
+    throw new Error(`Cannot divide ${a} by zero. The divisor must be a non-zero number.`);
   }
 
   const ops: Record<string, number> = {
