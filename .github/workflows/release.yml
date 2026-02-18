@@ -91,8 +91,14 @@ jobs:
           NEW_VERSION: ${{ steps.version.outputs.new_version }}
           NEW_HASH: ${{ steps.hash-check.outputs.new_hash }}
         run: |
+          if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "ERROR: new_version '${NEW_VERSION}' is not a valid semver. Aborting."
+            exit 1
+          fi
+
           git config user.name "mctx-bot[bot]"
           git config user.email "mctx-bot[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
 
           # Save built artifacts BEFORE switching branches
           cp -r dist/ /tmp/dist-release/
@@ -115,7 +121,7 @@ jobs:
           # Commit and push
           git add -f dist/ package.json .dist-hash
           git commit -m "release: v${NEW_VERSION}"
-          git push https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git release
+          git push origin release
 
       - name: Create GitHub release
         if: steps.hash-check.outputs.changed == 'true'
@@ -128,3 +134,28 @@ jobs:
             --target release \
             --title "v${NEW_VERSION}" \
             --generate-notes
+
+      - name: Bump version on main
+        if: steps.hash-check.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          TOKEN: ${{ steps.app-token.outputs.token }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "ERROR: new_version '${NEW_VERSION}' is not a valid semver. Aborting."
+            exit 1
+          fi
+
+          git config user.name "mctx-bot[bot]"
+          git config user.email "mctx-bot[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+
+          git checkout main
+          git pull --rebase origin main
+
+          jq --arg v "$NEW_VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
+
+          git add package.json
+          git commit -m "chore: bump version to ${NEW_VERSION} [skip ci]"
+          git push origin main
