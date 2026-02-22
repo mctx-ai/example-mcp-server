@@ -10,14 +10,13 @@ A working MCP server built with [`@mctx-ai/mcp-server`](https://github.com/mctx-
 
 ## What This Demonstrates
 
-All framework features in one file:
+All framework features in one file (`src/index.ts`):
 
-- **Tools** — string return, object return, error handling
-- **Progress** — generator functions with `yield step()` notifications
-- **Sampling** — ask the LLM for clarification via the `ask` parameter
+- **Tools** — sync handlers, object returns, error handling, generators with progress, LLM sampling
 - **Resources** — static URIs and dynamic URI templates with parameter extraction
 - **Prompts** — single-message (string return) and multi-message (`conversation()`)
 - **Logging** — structured logging with `log.info()`, `log.error()`, etc.
+- **Environment Variables** — configurable behavior via `GREETING` env var (set in mctx dashboard)
 
 ---
 
@@ -34,27 +33,38 @@ Deploy to mctx:
 
 1. Visit [mctx.ai](https://mctx.ai)
 2. Connect your repository
-3. Deploy — mctx reads `mctx.json` and runs your server
+3. Deploy — mctx reads `package.json` for server configuration
 
 ---
 
 ## Project Structure
 
 ```
-index.js     → Server implementation (all features in ~110 lines)
-mctx.json    → Platform configuration (name, entrypoint, capabilities)
-package.json → Dependencies and build script
+src/index.ts → Server implementation (all features in one file)
+package.json → Server metadata (name, version, description, main entrypoint)
 ```
 
 ---
 
 ## Local Development
 
-Use the dev server for hot-reload during development:
+Run the dev server with automatic rebuild and hot-reload:
 
 ```bash
-npx mctx-dev index.js
+npm run dev
 ```
+
+This runs both esbuild watch (rebuilds on source changes) and `mctx-dev` (hot-reloads the server) in parallel.
+
+### Testing Environment Variables
+
+To test environment variable configuration locally:
+
+```bash
+GREETING="Howdy" npm run dev
+```
+
+The `greet` tool will use "Howdy" instead of the default "Hello". When deployed to mctx, set `GREETING` in the dashboard to customize the greeting.
 
 ---
 
