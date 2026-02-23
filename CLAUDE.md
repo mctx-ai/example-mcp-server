@@ -52,3 +52,20 @@ gh api repos/actions/checkout/git/ref/tags/v4.2.2 --jq '.object.sha'
 ### Enforcement
 
 All workflow files in `.github/workflows/` must comply. PRs with tag-based action references will be rejected.
+
+## Version Bump Process
+
+**Admin-only operation.** Version bumps require branch protection bypass (admin privileges). Only Karl can push these.
+
+### Steps
+
+1. Update `version` in `package.json` on `main` (run `npm install` to sync `package-lock.json`)
+2. Commit on `main`: `chore: bump version to X.Y.Z`
+3. Cherry-pick that commit onto `release`
+4. Push both `main` and `release` branches
+
+### Notes
+
+- No code changes — version bump only
+- Requires admin bypass for branch protection on both `main` and `release`
+- Always wait for any in-flight deployments to finish before pushing
