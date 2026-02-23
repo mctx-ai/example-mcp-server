@@ -232,3 +232,4 @@ All workflow files in `.github/workflows/` must comply. PRs with tag-based actio
 - No code changes — version bump only
 - Requires admin bypass for branch protection on both `main` and `release`
 - Always wait for any in-flight deployments to finish before pushing
+- **Order matters:** Always commit on `main` first, then cherry-pick to `release` — not the reverse
