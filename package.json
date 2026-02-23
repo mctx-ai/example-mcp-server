@@ -1,6 +1,6 @@
 {
   "name": "example-mcp-server",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Example MCP server with tools, resources, prompts, progress, and sampling via mctx",
   "type": "module",
   "main": "dist/index.js",
