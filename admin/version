@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
-# admin/version.sh
+# admin/version
 #
-# Admin-only script for reading the current version or bumping the package
-# version and syncing it to the release branch. Requires branch protection
-# bypass (admin) privileges for bump operations.
+# Admin-only script for version bumps (requires branch protection bypass).
+#
+# What: Reads current version or bumps it, syncs package-lock.json, commits
+#       on main, cherry-picks to release.
 #
 # Usage:
-#   ./admin/version.sh               # Read current version
-#   ./admin/version.sh <patch|minor|major|X.Y.Z> [--push]
+#   ./admin/version               # Show current version
+#   ./admin/version patch|minor|major|X.Y.Z [--push]  # Bump and optionally push
 #
-# Arguments:
-#   (no args)                        Read current version and exit
-#   patch|minor|major                Semver increment type
-#   X.Y.Z                            Explicit version (e.g. 1.2.3)
-#   --push                           Push both main and release after cherry-pick
+# Flags:
+#   --push                        Push both main and release after cherry-pick
+#   --help, -h                    Show this message
+#
+# Flow: Updates package.json → syncs lockfile → commits on main → cherry-picks
+#       to release → optionally pushes both branches.
 
 set -euo pipefail
 
@@ -43,8 +45,16 @@ fi
 # Usage for bump operations
 # ---------------------------------------------------------------------------
 usage() {
+  local exit_code="${1:-1}"
   echo "Usage: $(basename "$0") [<patch|minor|major|X.Y.Z>] [--push]"
-  exit 1
+  echo ""
+  echo "Examples:"
+  echo "  ./admin/version                  Show current version"
+  echo "  ./admin/version patch            Bump patch version"
+  echo "  ./admin/version minor            Bump minor version"
+  echo "  ./admin/version patch --push     Bump and push both branches"
+  echo "  ./admin/version 1.2.3            Set explicit version"
+  exit "$exit_code"
 }
 
 # ---------------------------------------------------------------------------
@@ -55,6 +65,9 @@ push_branches=false
 
 for arg in "$@"; do
   case "$arg" in
+    --help|-h)
+      usage 0
+      ;;
     --push)
       push_branches=true
       ;;
