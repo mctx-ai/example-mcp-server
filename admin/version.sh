@@ -122,18 +122,18 @@ compute_next_version() {
     *)
       # Treat as explicit version — validate format
       if [[ ! "$bump" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Error: '$bump' is not a valid semver type (patch|minor|major) or version (X.Y.Z)."
-        exit 1
+        echo "Error: '$bump' is not a valid semver type (patch|minor|major) or version (X.Y.Z)." >&2
+        return 1
       fi
       echo "$bump"
-      return
+      return 0
       ;;
   esac
 
   echo "${major}.${minor}.${patch}"
 }
 
-next_version=$(compute_next_version "$current_version" "$bump_type")
+next_version=$(compute_next_version "$current_version" "$bump_type") || exit 1
 echo "Next version:    $next_version"
 
 # ---------------------------------------------------------------------------
