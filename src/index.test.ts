@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import server from './index.js';
 
 // Helper to create JSON-RPC 2.0 request
-function createRequest(method: string, params: any = {}) {
+function createRequest(method: string, params: Record<string, unknown> = {}) {
   return new Request('http://localhost', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -173,7 +173,10 @@ describe('Tool: analyze', () => {
 });
 
 describe('Tool: smart-answer', () => {
-  test('should answer question without sampling', async () => {
+  // In HTTP/stateless transport the framework passes ask=null to handlers,
+  // so these tests exercise the fallback path. The sampling path (ask != null)
+  // is exercised in streaming transports (WebSocket/SSE) at runtime.
+  test('should include the question in the response', async () => {
     const req = createRequest('tools/call', {
       name: 'smart-answer',
       arguments: { question: 'What is TypeScript?' },
@@ -182,10 +185,9 @@ describe('Tool: smart-answer', () => {
     const data = await getResponse(res);
 
     expect(data.result.content[0].text).toContain('What is TypeScript?');
-    expect(data.result.content[0].text).toContain('Answer to:');
   });
 
-  test('should handle different questions', async () => {
+  test('should include both Question and Answer sections in the response', async () => {
     const req = createRequest('tools/call', {
       name: 'smart-answer',
       arguments: { question: 'How does MCP work?' },
@@ -193,7 +195,33 @@ describe('Tool: smart-answer', () => {
     const res = await server.fetch(req);
     const data = await getResponse(res);
 
-    expect(data.result.content[0].text).toContain('How does MCP work?');
+    const text: string = data.result.content[0].text;
+    expect(text).toContain('Question:');
+    expect(text).toContain('Answer:');
+    expect(text).toContain('How does MCP work?');
+  });
+
+  test('should explain that LLM sampling requires a streaming transport', async () => {
+    const req = createRequest('tools/call', {
+      name: 'smart-answer',
+      arguments: { question: 'Why is the sky blue?' },
+    });
+    const res = await server.fetch(req);
+    const data = await getResponse(res);
+
+    // Fallback response should tell the caller how to get full sampling support
+    expect(data.result.content[0].text).toContain('streaming transport');
+  });
+
+  test('should not return an error for a valid question', async () => {
+    const req = createRequest('tools/call', {
+      name: 'smart-answer',
+      arguments: { question: 'What is the capital of France?' },
+    });
+    const res = await server.fetch(req);
+    const data = await getResponse(res);
+
+    expect(data.result.isError).toBeFalsy();
   });
 });
 
@@ -323,7 +351,7 @@ describe('Server capabilities', () => {
     const res = await server.fetch(req);
     const data = await getResponse(res);
 
-    const toolNames = data.result.tools.map((t: any) => t.name);
+    const toolNames = data.result.tools.map((t: { name: string }) => t.name);
     expect(toolNames).toContain('greet');
     expect(toolNames).toContain('calculate');
     expect(toolNames).toContain('analyze');
@@ -335,14 +363,14 @@ describe('Server capabilities', () => {
     const resResources = await server.fetch(reqResources);
     const dataResources = await getResponse(resResources);
 
-    const resourceUris = dataResources.result.resources.map((r: any) => r.uri);
+    const resourceUris = dataResources.result.resources.map((r: { uri: string }) => r.uri);
     expect(resourceUris).toContain('docs://readme');
 
     const reqTemplates = createRequest('resources/templates/list');
     const resTemplates = await server.fetch(reqTemplates);
     const dataTemplates = await getResponse(resTemplates);
 
-    const templateUris = dataTemplates.result.resourceTemplates.map((t: any) => t.uriTemplate);
+    const templateUris = dataTemplates.result.resourceTemplates.map((t: { uriTemplate: string }) => t.uriTemplate);
     expect(templateUris).toContain('user://{userId}');
   });
 
@@ -351,7 +379,7 @@ describe('Server capabilities', () => {
     const res = await server.fetch(req);
     const data = await getResponse(res);
 
-    const promptNames = data.result.prompts.map((p: any) => p.name);
+    const promptNames = data.result.prompts.map((p: { name: string }) => p.name);
     expect(promptNames).toContain('code-review');
     expect(promptNames).toContain('debug');
   });

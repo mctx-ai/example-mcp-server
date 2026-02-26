@@ -150,8 +150,12 @@ server.tool('analyze', analyze);
 
 /**
  * The `ask` parameter enables LLM sampling -- your tool can ask the client's
- * LLM for help mid-execution. It may be null if the client doesn't support it,
- * so always check before calling.
+ * LLM for help mid-execution. It may be null if the client doesn't support it
+ * (e.g., HTTP/stateless transport), so always check before calling.
+ *
+ * When available, use the advanced SamplingOptions form to control the model,
+ * system prompt, and token budget. The simple string form also works for
+ * straightforward one-shot prompts.
  */
 const smartAnswer: ToolHandler = async (args, ask?) => {
   const { question } = args as { question: string };
@@ -159,17 +163,37 @@ const smartAnswer: ToolHandler = async (args, ask?) => {
   log.info(`Processing question: ${question}`);
 
   if (!ask) {
-    log.warning('Sampling not available, providing basic answer');
-    return `Answer to: ${question}`;
+    // Sampling requires bidirectional transport (WebSocket/SSE).
+    // In HTTP mode, fall back to a direct answer without LLM assistance.
+    log.warning('LLM sampling not available (HTTP transport); returning direct answer');
+    return `Question: ${question}\n\nAnswer: LLM sampling is not available in this transport mode. Connect via a streaming transport (WebSocket or SSE) to enable the smart-answer tool's full capability.`;
   }
 
-  log.debug('Sampling enabled, requesting clarification from LLM');
-  const clarification = await ask('What additional context would help me answer this better?');
-  log.debug({ clarification });
+  // Use the advanced SamplingOptions form to demonstrate the full ask() API:
+  // - messages: structured conversation history passed to the LLM
+  // - systemPrompt: role/persona for the sampled response
+  // - maxTokens: upper bound on response length
+  log.debug('LLM sampling available — requesting answer via ask()');
+  const answer = await ask({
+    messages: [
+      {
+        role: 'user',
+        content: {
+          type: 'text',
+          text: question,
+        },
+      },
+    ],
+    systemPrompt:
+      'You are a knowledgeable assistant. Answer the question clearly and concisely.',
+    maxTokens: 1024,
+  });
+  log.debug({ answer });
 
-  return `Question: ${question}\nContext: ${clarification}\nAnswer: With the additional context, here is a comprehensive answer.`;
+  return `Question: ${question}\n\nAnswer: ${answer}`;
 };
-smartAnswer.description = 'Answers questions, optionally asking the LLM for clarification';
+smartAnswer.description =
+  'Answers questions using LLM sampling (ask) when available, with a direct fallback for HTTP transport';
 smartAnswer.input = {
   question: T.string({
     required: true,
