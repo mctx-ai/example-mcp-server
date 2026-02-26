@@ -98,7 +98,6 @@ jobs:
 
           git config user.name "mctx-bot[bot]"
           git config user.email "mctx-bot[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
 
           # Save built artifacts BEFORE switching branches
           cp -r dist/ /tmp/dist-release/
@@ -121,7 +120,7 @@ jobs:
           # Commit and push
           git add -f dist/ package.json .dist-hash
           git commit -m "release: v${NEW_VERSION}"
-          git push origin release
+          git -c http.extraHeader="Authorization: Bearer ${TOKEN}" push origin release
 
       - name: Create GitHub release
         if: steps.hash-check.outputs.changed == 'true'
@@ -141,6 +140,7 @@ jobs:
         continue-on-error: true
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           NEW_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -150,10 +150,12 @@ jobs:
 
           git config user.name "mctx-bot[bot]"
           git config user.email "mctx-bot[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+
+          bump_branch="chore/bump-version-${NEW_VERSION}"
 
           git checkout main
           git pull --rebase origin main
+          git checkout -b "$bump_branch"
 
           jq --arg v "$NEW_VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
 
@@ -167,7 +169,20 @@ jobs:
             exit 1
           fi
 
-          git push origin main
+          git -c http.extraHeader="Authorization: Bearer ${TOKEN}" push origin "$bump_branch"
+
+          existing_pr=$(gh pr list --head "$bump_branch" --repo "${{ github.repository }}" --json number --jq '.[0].number // empty')
+          if [ -n "$existing_pr" ]; then
+            echo "PR #${existing_pr} already exists for ${bump_branch}. Skipping creation."
+          else
+            gh pr create \
+              --head "$bump_branch" \
+              --base main \
+              --title "chore: bump version to ${NEW_VERSION}" \
+              --body "Automated version bump after release v${NEW_VERSION}."
+          fi
+
+          gh pr merge --auto --squash --head "$bump_branch" --repo "${{ github.repository }}"
 
       - name: Warn if version sync to main failed
         if: steps.bump-main.outcome == 'failure'
