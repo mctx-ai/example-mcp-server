@@ -4,18 +4,22 @@
 # Admin-only script for version bumps (requires branch protection bypass).
 #
 # What: Reads current version or bumps it, syncs package-lock.json, commits
-#       on main, cherry-picks to release.
+#       independently on both main and release (same version, same message).
 #
 # Usage:
 #   ./admin/version               # Show current version
 #   ./admin/version patch|minor|major|X.Y.Z [--push]  # Bump and optionally push
 #
 # Flags:
-#   --push                        Push both main and release after cherry-pick
+#   --push                        Push both main and release after committing
 #   --help, -h                    Show this message
 #
-# Flow: Updates package.json → syncs lockfile → commits on main → cherry-picks
-#       to release → optionally pushes both branches.
+# Flow: Updates package.json → syncs lockfile → commits on main → switches to
+#       release → applies same version bump independently → commits → switches
+#       back to main → optionally pushes both branches.
+#
+# Note: Each branch receives its own independent version bump commit so that
+#       divergence in non-version fields of package.json does not cause conflicts.
 
 set -euo pipefail
 
@@ -170,22 +174,24 @@ git add package.json package-lock.json
 echo "Committing: ${commit_message}"
 git commit -m "$commit_message"
 
-commit_sha=$(git rev-parse HEAD)
-echo "Committed: $commit_sha"
-
 # ---------------------------------------------------------------------------
-# Cherry-pick onto release
+# Apply the same version bump independently on release
 # ---------------------------------------------------------------------------
 echo ""
 echo "Switching to '$RELEASE_BRANCH'..."
 git switch "$RELEASE_BRANCH"
 
-echo "Cherry-picking $commit_sha onto '$RELEASE_BRANCH'..."
-if ! git cherry-pick "$commit_sha"; then
-  echo "Error: cherry-pick conflict on '$RELEASE_BRANCH'. To recover:"
-  echo "  git cherry-pick --abort && git switch $MAIN_BRANCH"
-  exit 1
-fi
+echo "Updating package.json on '$RELEASE_BRANCH'..."
+npm pkg set version="$next_version"
+
+echo "Syncing package-lock.json on '$RELEASE_BRANCH'..."
+npm install --package-lock-only --ignore-scripts
+
+echo "Staging package.json and package-lock.json..."
+git add package.json package-lock.json
+
+echo "Committing: ${commit_message}"
+git commit -m "$commit_message"
 
 echo "Switching back to '$MAIN_BRANCH'..."
 git switch "$MAIN_BRANCH"
