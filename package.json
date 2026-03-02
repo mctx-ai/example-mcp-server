@@ -1,6 +1,6 @@
 {
   "name": "example-mcp-server",
-  "version": "0.3.44",
+  "version": "0.3.45",
   "description": "Example MCP server built with @mctx-ai/mcp-server — free hosting, built-in monetization, and managed infrastructure on mctx.ai",
   "homepage": "https://mctx.ai",
   "type": "module",
