@@ -157,7 +157,7 @@ server.tool('analyze', analyze);
  * system prompt, and token budget. The simple string form also works for
  * straightforward one-shot prompts.
  */
-const smartAnswer: ToolHandler = async (args, ask?) => {
+export const smartAnswer: ToolHandler = async (args, ask?) => {
   const { question } = args as { question: string };
 
   log.info(`Processing question: ${question}`);
