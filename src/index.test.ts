@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import server from './index.js';
+import server, { smartAnswer } from './index.js';
 
 // Helper to create JSON-RPC 2.0 request
 function createRequest(method: string, params: Record<string, unknown> = {}) {
@@ -222,6 +222,30 @@ describe('Tool: smart-answer', () => {
     const data = await getResponse(res);
 
     expect(data.result.isError).toBeFalsy();
+  });
+
+  // The ask-available path cannot go through server.fetch() (HTTP transport always
+  // passes ask=null). These tests invoke the exported handler directly with a mock
+  // ask function to cover that code path.
+
+  test('should return LLM response content when ask is available and succeeds', async () => {
+    const mockAsk = async () => 'Paris is the capital of France.';
+    const result = await smartAnswer({ question: 'What is the capital of France?' }, mockAsk);
+
+    expect(result).toContain('What is the capital of France?');
+    expect(result).toContain('Paris is the capital of France.');
+    expect(result).toContain('Question:');
+    expect(result).toContain('Answer:');
+  });
+
+  test('should propagate error when ask throws', async () => {
+    const mockAsk = async () => {
+      throw new Error('Sampling failed: model unavailable');
+    };
+
+    await expect(
+      smartAnswer({ question: 'What is TypeScript?' }, mockAsk),
+    ).rejects.toThrow('Sampling failed: model unavailable');
   });
 });
 
