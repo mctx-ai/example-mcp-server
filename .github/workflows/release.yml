@@ -102,6 +102,7 @@ jobs:
           # Save built artifacts BEFORE switching branches
           cp -r dist/ /tmp/dist-release/
           cp package.json /tmp/package-release.json
+          cp README.md /tmp/README-release.md
 
           # Checkout release branch
           git fetch origin release
@@ -110,6 +111,7 @@ jobs:
           # Copy artifacts back
           cp -r /tmp/dist-release/* dist/ 2>/dev/null || mkdir -p dist && cp -r /tmp/dist-release/* dist/
           cp /tmp/package-release.json package.json
+          cp /tmp/README-release.md README.md
 
           # Update package.json version
           jq --arg v "$NEW_VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
@@ -118,7 +120,7 @@ jobs:
           echo "$NEW_HASH" > .dist-hash
 
           # Commit and push
-          git add -f dist/ package.json .dist-hash
+          git add -f dist/ package.json README.md .dist-hash
           git commit -m "release: v${NEW_VERSION}"
           git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
           git push origin release

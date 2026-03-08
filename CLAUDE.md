@@ -62,6 +62,97 @@ The handler processes JSON-RPC 2.0 requests over HTTP.
 
 ---
 
+## Deployment Model
+
+**mctx does not run build commands.** The built file (`dist/index.js`) must be committed to the repository. mctx serves whatever is in `dist/index.js` on the branch it deploys from — it never executes `npm run build` or any equivalent.
+
+This is the same pattern used by GitHub Actions JavaScript actions: the compiled output is part of the source tree, not an artifact generated at deploy time.
+
+**Practical consequence:** Any time you change `src/index.ts`, you must run `npm run build` and commit both the source change and the updated `dist/index.js`. A source-only commit will not affect what mctx runs.
+
+**Deployment trigger:** mctx deploys from the `release` branch. It watches for version changes in `package.json` on that branch (see [Release Pipeline](#release-pipeline)). When the `version` field changes on a push to `release`, mctx starts a new deployment automatically. A push with no version bump does not trigger deployment, even if `dist/index.js` changed.
+
+**Constraints:** Do not edit the `release` branch directly — it is fully managed by CI. Do not expect mctx to run `npm install`, `npm run build`, or any other build step at deploy time.
+
+---
+
+## Release Pipeline
+
+Pushing to `main` triggers the release workflow in CI. That workflow:
+1. Runs tests and linting
+2. Commits `dist/index.js`, `package.json`, and `README.md` to the `release` branch
+
+**mctx deploys from the `release` branch**, not from `main`. The `release` branch is fully managed by CI — never edit it directly. All changes flow through `main` via pull request.
+
+**Version bump process** (admin-only — requires branch protection bypass, Karl only):
+1. Update `version` in `package.json` on `main` and run `npm install` to sync `package-lock.json`
+2. Commit on `main`: `chore: bump version to X.Y.Z`
+3. Cherry-pick that commit onto `release`
+4. Push both `main` and `release` branches
+
+Notes:
+- No code changes in a version bump commit — only `version` in `package.json` and the `package-lock.json` sync from running `npm install`
+- Always wait for any in-flight deployments to finish before pushing
+- Always commit on `main` first, then cherry-pick to `release` — not the reverse
+
+---
+
+## Two-Audience Model
+
+Content in this repository serves two distinct audiences. Understanding which audience each artifact targets determines how to write it.
+
+### instructions — Audience: AI clients
+
+The `instructions` field passed to `createServer()` (or set in `package.json`) is sent to AI clients such as Claude and Cursor when they connect to this MCP server. Its purpose is to help the AI decide what this server covers and when to call its tools. Setting instructions in code via `createServer()` takes precedence over the `instructions` field in `package.json`.
+
+Write instructions for a machine that needs clear routing signals:
+- Name every tool and describe what each one does
+- Name every resource URI pattern
+- Be explicit about capabilities and constraints
+- Concise is better than comprehensive — the AI will learn tool details from the schema
+
+### README.md — Audience: Human subscribers
+
+`README.md` is displayed on the server's public mctx page as the subscriber-facing product page. People evaluating whether to subscribe to this server, or current subscribers looking for usage guidance, read this file.
+
+Write the README for humans who want to understand what the server offers and how to use it:
+- Lead with the value proposition
+- Explain use cases in plain language
+- Include examples that show real-world benefit
+
+### description in package.json — Server info and registry
+
+The `description` field appears on the server's mctx info page and in the MCP Community Registry. It is the one-liner that represents this server in listings and search results. Write it to be informative and scannable at a glance.
+
+---
+
+## package.json Fields
+
+mctx reads specific fields from `package.json` to configure and identify your server. Know what each field controls.
+
+**Required fields:**
+
+| Field | Purpose |
+|-------|---------|
+| `name` | MCP server display name shown in the mctx dashboard and sent to AI clients as the server identifier |
+| `version` | Triggers a new mctx deployment when it changes on a push |
+| `description` | Shown on the server info page and MCP Community Registry |
+| `main` | Path to the built JS file mctx serves (`dist/index.js`) |
+
+**Important type field:**
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| `type` | `"module"` | Required for ESM — the framework uses ES module syntax |
+
+**Optional fields:**
+
+| Field | Purpose |
+|-------|---------|
+| `instructions` | AI client guidance — alternative to setting it in code via `createServer()` (see [Two-Audience Model](#two-audience-model) for precedence rule). |
+
+---
+
 ## Common Development Commands
 
 ### Build
@@ -69,6 +160,8 @@ The handler processes JSON-RPC 2.0 requests over HTTP.
 npm run build
 ```
 Bundles `src/index.ts` → `dist/index.js` using esbuild (minified ESM output).
+
+**Always commit `dist/index.js` after building** — mctx does not build on deploy.
 
 ### Development
 ```bash
@@ -215,21 +308,3 @@ gh api repos/actions/checkout/git/ref/tags/v4.2.2 --jq '.object.sha'
 ### Enforcement
 
 All workflow files in `.github/workflows/` must comply. PRs with tag-based action references will be rejected.
-
-## Version Bump Process
-
-**Admin-only operation.** Version bumps require branch protection bypass (admin privileges). Only Karl can push these.
-
-### Steps
-
-1. Update `version` in `package.json` on `main` (run `npm install` to sync `package-lock.json`)
-2. Commit on `main`: `chore: bump version to X.Y.Z`
-3. Cherry-pick that commit onto `release`
-4. Push both `main` and `release` branches
-
-### Notes
-
-- No code changes — version bump only
-- Requires admin bypass for branch protection on both `main` and `release`
-- Always wait for any in-flight deployments to finish before pushing
-- **Order matters:** Always commit on `main` first, then cherry-pick to `release` — not the reverse
