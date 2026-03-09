@@ -52,21 +52,15 @@ const server = createServer({
 
 /**
  * Simplest tool pattern: receive args, return a string.
- * Demonstrates the recommended env passthrough pattern for 0.7.0+.
  *
- * In 0.7.0, handlers receive a frozen `env` object as their 3rd argument,
- * populated by the runtime (e.g., Cloudflare Workers bindings). Always read
- * env lazily inside the handler — env is NOT available at module scope in
- * Workers, so top-level access will silently return undefined.
- *
- * Precedence: env bindings > process.env > default value
- *   - env: Cloudflare Workers / mctx runtime bindings (highest priority)
- *   - process.env: Node.js environment variables (local dev / Node adapters)
- *   - default: hardcoded fallback when neither source provides a value
+ * Demonstrates environment variable usage via GREETING env var.
+ * Set GREETING in the mctx dashboard to customize the greeting message.
+ * Reads process.env lazily inside the handler (not at module scope) because
+ * env vars may not be available at import time in some runtimes.
  */
-const greet: ToolHandler = (args, _ask, env?: Record<string, any>) => {
+const greet: ToolHandler = (args) => {
   const { name } = args as { name: string };
-  const greeting = env?.GREETING || process.env.GREETING || 'Hello';
+  const greeting = process.env.GREETING || 'Hello';
   const trimmedName = name.trim();
 
   log.info(`Greeting ${trimmedName} with: ${greeting}`);

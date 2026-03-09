@@ -9,15 +9,15 @@ importers:
   .:
     dependencies:
       '@mctx-ai/mcp-server':
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.8.0
+        version: 0.8.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.17.0
         version: 9.39.4
       '@mctx-ai/mcp-dev':
         specifier: ^0.5.5
-        version: 0.5.7(@mctx-ai/mcp-server@0.7.0)
+        version: 0.5.7(@mctx-ai/mcp-server@0.8.0)
       '@types/node':
         specifier: ^25.3.5
         version: 25.3.5
@@ -267,8 +267,8 @@ packages:
     peerDependencies:
       '@mctx-ai/mcp-server': 0.7.0
 
-  '@mctx-ai/mcp-server@0.7.0':
-    resolution: {integrity: sha512-C6i3Mt5kb9jNVn7bHuKosswpyV9RcHJNK9UxAjPw/xEDbP+eDl5R+AzLMQZ6jF8NfSOLwiyGbpJfTNI7CACH3A==}
+  '@mctx-ai/mcp-server@0.8.0':
+    resolution: {integrity: sha512-rCZL4JEC4UGBCTCIcjWkBO+9FvsUSHg43sy1IDVcQWHKOIB4+jOdqYcSBnSHT3zray9z081Q8ElYgx+mWvGmVg==}
 
   '@rollup/rollup-android-arm-eabi@4.59.0':
     resolution: {integrity: sha512-upnNBkA6ZH2VKGcBj9Fyl9IGNPULcjXRlg0LLeaioQWueH30p6IXtJEbKAgvyv+mJaMxSm1l6xwDXYjpEMiLMg==}
@@ -1194,11 +1194,11 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
-  '@mctx-ai/mcp-dev@0.5.7(@mctx-ai/mcp-server@0.7.0)':
+  '@mctx-ai/mcp-dev@0.5.7(@mctx-ai/mcp-server@0.8.0)':
     dependencies:
-      '@mctx-ai/mcp-server': 0.7.0
+      '@mctx-ai/mcp-server': 0.8.0
 
-  '@mctx-ai/mcp-server@0.7.0': {}
+  '@mctx-ai/mcp-server@0.8.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.59.0':
     optional: true
