@@ -161,30 +161,103 @@ Demonstrates `conversation()` for multi-role dialogue.
 
 ---
 
-## Quick Start
+## Use This Template
+
+This repo is a GitHub template. Click **Use this template** on GitHub, then:
+
+**1. Clone your new repo**
 
 ```bash
-git clone https://github.com/mctx-ai/example-mcp-server.git
-cd example-mcp-server
-npm install
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+```
+
+**2. Run the setup script**
+
+```bash
+./setup.sh
+```
+
+`setup.sh` runs once and prompts you for a project name and description, asks whether to keep the example code or start from a minimal skeleton, updates `package.json`, rewrites `README.md` with a clean starting point, installs dependencies, creates an initial git commit, and deletes itself.
+
+**3. Start developing**
+
+```bash
 npm run dev
 ```
 
-The dev server runs esbuild in watch mode and hot-reloads via `mctx-dev` on every rebuild.
+If you kept the examples, `src/index.ts` is unchanged — study the patterns and modify from there. If you started empty, you get a minimal skeleton with a single `hello` tool to build from.
 
-**Test an environment variable locally:**
+---
+
+## Development Commands
+
+### Build
+
+```bash
+npm run build
+```
+
+Bundles `src/index.ts` to `dist/index.js` using esbuild (minified ESM output).
+
+### Dev Server
+
+```bash
+npm run dev
+```
+
+Runs parallel watch mode:
+- `dev:build` — esbuild watch (rebuilds on source changes)
+- `dev:server` — mctx-dev hot-reloads server on rebuild
+
+**Test environment variables during dev:**
 
 ```bash
 GREETING="Howdy" npm run dev
 ```
 
-**Deploy to [mctx.ai](https://mctx.ai):**
+### Testing
 
-1. Visit [mctx.ai](https://mctx.ai) and connect your repository
-2. Set any environment variables (e.g., `GREETING`) in the dashboard
-3. Deploy — mctx reads `package.json` for server configuration
+```bash
+# Run all tests
+npm test
 
-mctx handles TLS, scaling, and uptime. You keep the code. Set your price and get paid when other developers use your server.
+# Run tests in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test src/index.test.ts
+
+# Run tests matching pattern
+npm test -- -t "greet"
+```
+
+### Linting
+
+```bash
+# Check for issues
+npm run lint
+```
+
+### Formatting
+
+```bash
+# Format all files
+npm run format
+
+# Check formatting without modifying
+npm run format:check
+```
+
+---
+
+## Environment Variables
+
+**`GREETING`** — Customizes the greeting message in the `greet` tool.
+- **Default:** `"Hello"`
+- **Example:** `GREETING="Howdy"` produces `"Howdy, Alice!"`
+
+Set environment variables in the [mctx.ai dashboard](https://mctx.ai) when deployed — changes trigger a seamless automatic redeploy.
 
 ---
 
