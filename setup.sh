@@ -230,7 +230,7 @@ if command -v jq >/dev/null 2>&1; then
   jq \
     --arg name "$project_name" \
     --arg desc "$project_description" \
-    '.name = $name | .description = $desc' \
+    '.name = $name | .description = $desc | .version = "0.1.0"' \
     "$package_json" > "$tmp_file"
   mv "$tmp_file" "$package_json"
 else
@@ -244,7 +244,8 @@ else
 
   sed -i.bak1 "s|\"name\": \"[^\"]*\"|\"name\": \"$escaped_name\"|" "$package_json"
   sed -i.bak2 "s|\"description\": \"[^\"]*\"|\"description\": \"$escaped_desc\"|" "$package_json"
-  rm -f "$package_json.bak1" "$package_json.bak2"
+  sed -i.bak3 "s|\"version\": \"[^\"]*\"|\"version\": \"0.1.0\"|" "$package_json"
+  rm -f "$package_json.bak1" "$package_json.bak2" "$package_json.bak3"
 fi
 
 success "package.json updated."
