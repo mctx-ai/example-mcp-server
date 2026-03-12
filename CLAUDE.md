@@ -101,15 +101,13 @@ The handler processes JSON-RPC 2.0 requests over HTTP.
 
 ## Deployment Model
 
-**mctx does not run build commands.** The built file (`dist/index.js`) must be committed to the repository. mctx serves whatever is in `dist/index.js` on the branch it deploys from — it never executes `npm run build` or any equivalent.
+**mctx does not run build commands.** It serves whatever `dist/index.js` exists on the `release` branch — it never executes `npm run build` or any equivalent at deploy time.
 
-This is the same pattern used by GitHub Actions JavaScript actions: the compiled output is part of the source tree, not an artifact generated at deploy time.
+**`dist/` is gitignored on `main`.** Developers never commit build output. The release pipeline (see [Release Pipeline](#release-pipeline)) builds `dist/index.js` from source and commits it to the `release` branch automatically. This keeps `main` clean — only source code lives there.
 
-**Practical consequence:** Any time you change `src/index.ts`, you must run `npm run build` and commit both the source change and the updated `dist/index.js`. A source-only commit will not affect what mctx runs.
+**Deployment trigger:** mctx deploys from the `release` branch. It watches for version changes in `package.json` on that branch. When the `version` field changes on a push to `release`, mctx starts a new deployment automatically. A push with no version bump does not trigger deployment, even if `dist/index.js` changed.
 
-**Deployment trigger:** mctx deploys from the `release` branch. It watches for version changes in `package.json` on that branch (see [Release Pipeline](#release-pipeline)). When the `version` field changes on a push to `release`, mctx starts a new deployment automatically. A push with no version bump does not trigger deployment, even if `dist/index.js` changed.
-
-**Constraints:** Do not edit the `release` branch directly — it is fully managed by CI. Do not expect mctx to run `npm install`, `npm run build`, or any other build step at deploy time.
+**Constraints:** Do not edit the `release` branch directly — it is fully managed by CI. Do not commit `dist/index.js` on `main` — the `.gitignore` excludes it. Do not expect mctx to run `npm install`, `npm run build`, or any other build step at deploy time.
 
 ---
 
@@ -117,7 +115,7 @@ This is the same pattern used by GitHub Actions JavaScript actions: the compiled
 
 **Dual-branch model:** `main` (development) → `release` (production). The `release` branch is fully managed by CI — never edit it directly. All changes flow through `main` via pull request.
 
-Pushing to `main` triggers `release.yml`, which:
+Pushing to `main` triggers `release.yml` — the **only path** where `dist/index.js` gets committed. It:
 1. Builds `dist/index.js` from source
 2. Computes a combined SHA-256 hash across `dist/index.js`, `package.json`, and `README.md`, then compares to `.release-hash` on `release` — exits early if unchanged (no runtime changes)
 3. Determines version bump from commit message using conventional commits (see below)
@@ -318,7 +316,7 @@ Error handling tests verify `result.isError === true` and error message content.
 PRs to `main` run several automated checks:
 
 - **test.yml** — `npm ci` + `npm test` (Node 22)
-- **check-dist.yml** — Rebuilds `dist/` from source and fails if the committed `dist/index.js` doesn't match. **You must run `npm run build` and commit `dist/index.js` before opening a PR.**
+- **check-dist.yml** — Rebuilds `dist/` from source to verify the build succeeds. Since `dist/` is gitignored on `main`, this check validates that source changes produce a clean build — not that a committed `dist/index.js` matches. The actual `dist/index.js` commit happens on the `release` branch via the release pipeline.
 - **pr-title.yml** — Validates PR title follows conventional commit format
 - **pr-comment.yml** — Posts a comment explaining squash merge behavior and version bump rules
 - **dependabot-auto-merge.yml** — Auto-merges Dependabot PRs
