@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup.sh — Template initialization script for example-mcp-server
+# setup.sh — Template initialization script for example-app
 #
 # Run this once after creating a new repo from the GitHub template.
 # It customizes the project name, description, and optionally strips
@@ -279,7 +279,7 @@ readme="$repo_root/README.md"
 cat > "$readme" << 'README_EOF'
 <img src="https://mctx.ai/brand/logo-purple.png" alt="mctx" width="120">
 
-**Free MCP Hosting. Set Your Price. Get Paid.**
+**Explore all App capabilities with our comprehensive reference implementation.**
 
 # __PROJECT_NAME__
 
@@ -391,7 +391,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-An **App** built with `@mctx-ai/mcp-server` framework. Exposes tools, resources, and prompts to AI clients over JSON-RPC 2.0.
+An **App** built with `@mctx-ai/app` framework. Exposes tools, resources, and prompts to AI clients over JSON-RPC 2.0.
 
 **Purpose:** Provide capabilities that AI clients (Claude, Cursor, etc.) can invoke when connected to this App on the mctx platform.
 
@@ -879,7 +879,7 @@ if [ "$keep_examples" = "n" ]; then
  *   - Resources  → data exposed via URIs
  *   - Prompts    → reusable message templates
  *
- * Docs: https://github.com/mctx-ai/mcp-server
+ * Docs: https://github.com/mctx-ai/app
  */
 
 import {
